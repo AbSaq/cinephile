@@ -6,10 +6,21 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:client": "prettier --write \"client/**/*.{js,jsx,ts,tsx,json,css,md}\"",
-    "format:server": "prettier --write \"server/**/*.{js,ts,json}\""
+    "format:server": "prettier --write \"server/**/*.{js,ts,json}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "client/**/*.{js,jsx,ts,tsx,json,css,md}": [
+      "prettier --write"
+    ],
+    "server/**/*.{js,ts,json}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "@types/prettier": "^3.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0"
   }
