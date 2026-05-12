@@ -1,0 +1,16 @@
+{
+  "name": "cinephile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:client": "prettier --write \"client/**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "format:server": "prettier --write \"server/**/*.{js,ts,json}\""
+  },
+  "devDependencies": {
+    "@types/prettier": "^3.0.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0"
+  }
+}
