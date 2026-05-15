@@ -1,18 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "./api/client";
-import type { User } from "./types";
+import { apiClient } from "../api/client";
+import type { User } from "../types";
 
-// Query key for auth
 const AUTH_QUERY_KEY = ["auth", "user"];
 
-// Fetch current user from backend (validates token)
-async function fetchCurrentUser(): Promise<User | null> {
+export async function fetchCurrentUser(): Promise<User | null> {
   try {
     const response = await apiClient.get("/user/profile");
     return response.data;
-  } catch (error) {
-    // Token invalid or expired
+  } catch {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     return null;
   }
 }
@@ -20,7 +18,7 @@ async function fetchCurrentUser(): Promise<User | null> {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  // Query: get current user (automatically cached, refetched on window focus, etc.)
+  // Query: user data (auto‑cached, auto‑refetched)
   const {
     data: user,
     isLoading,
@@ -28,15 +26,14 @@ export function useAuth() {
   } = useQuery({
     queryKey: AUTH_QUERY_KEY,
     queryFn: fetchCurrentUser,
-    staleTime: 1000 * 60 * 30, // 30 minutes - user data doesn't change often
+    staleTime: 1000 * 60 * 30, // 30 minutes
     initialData: () => {
-      // Optional: hydrate from localStorage on initial load
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : undefined;
     },
   });
 
-  // Mutation: login
+  // Login mutation
   const loginMutation = useMutation({
     mutationFn: async ({
       email,
@@ -45,8 +42,8 @@ export function useAuth() {
       email: string;
       password: string;
     }) => {
-      const response = await apiClient.post("/auth/login", { email, password });
-      const { token, user } = response.data;
+      const res = await apiClient.post("/auth/login", { email, password });
+      const { token, user } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       return user;
@@ -56,7 +53,7 @@ export function useAuth() {
     },
   });
 
-  // Mutation: register
+  // Register mutation
   const registerMutation = useMutation({
     mutationFn: async ({
       name,
@@ -67,12 +64,12 @@ export function useAuth() {
       email: string;
       password: string;
     }) => {
-      const response = await apiClient.post("/auth/register", {
+      const res = await apiClient.post("/auth/register", {
         name,
         email,
         password,
       });
-      const { token, user } = response.data;
+      const { token, user } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       return user;
@@ -82,7 +79,7 @@ export function useAuth() {
     },
   });
 
-  // Mutation: logout
+  // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
       localStorage.removeItem("token");
@@ -90,7 +87,7 @@ export function useAuth() {
     },
     onSettled: () => {
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
-      queryClient.clear(); // Clear all cached data (movies, lists, etc.)
+      queryClient.clear(); // clear all cached data
     },
   });
 
