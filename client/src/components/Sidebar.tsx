@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { useAuth } from "../hooks/useAuth";
-import { User } from "../types";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useAuth } from "../features/auth/hooks/useAuth.tsx";
+import type { User } from "../types";
 import { useState } from "react";
 
 interface SidebarProps {
@@ -9,11 +9,24 @@ interface SidebarProps {
 
 export function Sidebar({ user }: SidebarProps) {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+  const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Toggle sidebar on mobile
   const toggleSidebar = () => setIsMobileOpen(!isMobileOpen);
   const closeSidebar = () => setIsMobileOpen(false);
+
+  const handleLogout = async () => {
+    try {
+      closeSidebar();
+      await logout();
+
+      await router.invalidate();
+      navigate({ to: "/login" });
+    } catch (error) {
+      console.error("Logout transition failed:", error);
+    }
+  };
 
   return (
     <>
@@ -22,6 +35,18 @@ export function Sidebar({ user }: SidebarProps) {
         className="mobile-menu-btn"
         onClick={toggleSidebar}
         aria-label="Menu"
+        style={{
+          position: "fixed",
+          top: "15px",
+          left: "15px",
+          zIndex: 110,
+          background: "var(--bg3)",
+          color: "var(--text)",
+          border: "1px solid var(--border)",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
       >
         ☰
       </button>
@@ -33,9 +58,10 @@ export function Sidebar({ user }: SidebarProps) {
         </div>
 
         {/* Navigation links */}
-        <nav>
+        <nav style={{ display: "flex", flexDirection: "column" }}>
+          {/* ✅ FIXED: Pointing directly to your new home layout feed endpoint */}
           <Link
-            to="/"
+            to="/home"
             className="nav-item"
             activeProps={{ className: "active" }}
             onClick={closeSidebar}
@@ -46,8 +72,9 @@ export function Sidebar({ user }: SidebarProps) {
             </span>
           </Link>
 
+          {/* ✅ FIXED: Cleaned up path strings matching your folder structure paths */}
           <Link
-            to="/user/watched"
+            to="/watched"
             className="nav-item"
             activeProps={{ className: "active" }}
             onClick={closeSidebar}
@@ -56,12 +83,10 @@ export function Sidebar({ user }: SidebarProps) {
             <span className="nav-lbl" data-key="watched">
               Watched
             </span>
-            {/* Optional badge: you can fetch count from query */}
-            {/* <span className="nav-badge">{watchedCount}</span> */}
           </Link>
 
           <Link
-            to="/user/watchlist"
+            to="/watchlist"
             className="nav-item"
             activeProps={{ className: "active" }}
             onClick={closeSidebar}
@@ -73,7 +98,7 @@ export function Sidebar({ user }: SidebarProps) {
           </Link>
 
           <Link
-            to="/user/profile"
+            to="/profile"
             className="nav-item"
             activeProps={{ className: "active" }}
             onClick={closeSidebar}
@@ -88,23 +113,33 @@ export function Sidebar({ user }: SidebarProps) {
         {/* Bottom section with user info & logout */}
         <div className="sidebar-bottom">
           <div className="user-info" onClick={closeSidebar}>
+            {/* Safe check fallback logic string indexing prevention in case name data is slow to hydrate */}
             <div className="user-avatar">
-              {user.name.charAt(0).toUpperCase()}
+              {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
             </div>
             <div>
-              <div className="user-name">{user.name}</div>
-              <div className="user-email">{user.email}</div>
+              <div className="user-name">{user?.name || "User"}</div>
+              <div className="user-email">{user?.email || ""}</div>
             </div>
           </div>
-          <button className="btn-logout" onClick={() => logout()}>
+          {/* ✅ FIXED: Assigned functional handleLogout click event processor wrapper */}
+          <button className="btn-logout" onClick={handleLogout}>
             Logout
           </button>
         </div>
       </aside>
 
-      {/* Optional overlay for mobile */}
       {isMobileOpen && (
-        <div className="sidebar-overlay" onClick={closeSidebar} />
+        <div
+          className="sidebar-overlay"
+          onClick={closeSidebar}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 99,
+          }}
+        />
       )}
     </>
   );

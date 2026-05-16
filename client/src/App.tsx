@@ -1,107 +1,38 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "./api/client";
-import type { User } from "./types";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { routeTree } from "./routeTree.gen";
 
-// Query key for auth
-const AUTH_QUERY_KEY = ["auth", "user"];
+// 1. Unified QueryClient configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes cache freshness
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-// Fetch current user from backend (validates token)
-async function fetchCurrentUser(): Promise<User | null> {
-  try {
-    const response = await apiClient.get("/user/profile");
-    return response.data;
-  } catch (error) {
-    // Token invalid or expired
-    localStorage.removeItem("token");
-    return null;
+// 2. Unified Router configuration with preload intent
+const router = createRouter({
+  routeTree,
+  context: {
+    queryClient,
+  },
+  defaultPreload: "intent",
+});
+
+// 3. Complete type register for TanStack link safety
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
   }
 }
 
-export function useAuth() {
-  const queryClient = useQueryClient();
-
-  // Query: get current user (automatically cached, refetched on window focus, etc.)
-  const {
-    data: user,
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: AUTH_QUERY_KEY,
-    queryFn: fetchCurrentUser,
-    staleTime: 1000 * 60 * 30, // 30 minutes - user data doesn't change often
-    initialData: () => {
-      // Optional: hydrate from localStorage on initial load
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
-    },
-  });
-
-  // Mutation: login
-  const loginMutation = useMutation({
-    mutationFn: async ({
-      email,
-      password,
-    }: {
-      email: string;
-      password: string;
-    }) => {
-      const response = await apiClient.post("/auth/login", { email, password });
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      return user;
-    },
-    onSuccess: (user) => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, user);
-    },
-  });
-
-  // Mutation: register
-  const registerMutation = useMutation({
-    mutationFn: async ({
-      name,
-      email,
-      password,
-    }: {
-      name: string;
-      email: string;
-      password: string;
-    }) => {
-      const response = await apiClient.post("/auth/register", {
-        name,
-        email,
-        password,
-      });
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      return user;
-    },
-    onSuccess: (user) => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, user);
-    },
-  });
-
-  // Mutation: logout
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    },
-    onSettled: () => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, null);
-      queryClient.clear(); // Clear all cached data (movies, lists, etc.)
-    },
-  });
-
-  return {
-    user,
-    isLoading,
-    login: loginMutation.mutateAsync,
-    register: registerMutation.mutateAsync,
-    logout: logoutMutation.mutateAsync,
-    isLoggingIn: loginMutation.isPending,
-    isRegistering: registerMutation.isPending,
-    refetchUser: refetch,
-  };
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
 }

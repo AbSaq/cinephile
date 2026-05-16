@@ -1,18 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "../api/client";
-import type { User } from "../types";
+import { apiClient } from "../../../api/client.ts";
+import type { User } from "../../../types";
 
 const AUTH_QUERY_KEY = ["auth", "user"];
 
 export async function fetchCurrentUser(): Promise<User | null> {
-  try {
-    const response = await apiClient.get("/user/profile");
-    return response.data;
-  } catch {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return null;
-  }
+  const response = await apiClient.get("/user/profile");
+  return response.data;
 }
 
 export function useAuth() {

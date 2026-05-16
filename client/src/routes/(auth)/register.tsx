@@ -1,99 +1,26 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
-import { useAuth, fetchCurrentUser } from "../../hooks/useAuth";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { RegisterPage } from "../../components/RegisterPage.tsx";
+import { fetchCurrentUser } from "../../features/auth/hooks/useAuth";
 
 export const Route = createFileRoute("/(auth)/register")({
-  beforeLoad: async () => {
-    const user = await fetchCurrentUser();
-    if (user) {
-      throw redirect({
-        to: "/",
+  beforeLoad: async ({ context }) => {
+    try {
+      // Safely inspect your query cache first
+      const user = await context.queryClient.ensureQueryData({
+        queryKey: ["auth", "user"],
+        queryFn: fetchCurrentUser,
       });
+
+      // If they are already logged in, push them away to /home
+      if (user) {
+        throw redirect({ to: "/home" });
+      }
+    } catch (error) {
+      // Let TanStack Router redirects pass through
+      if (error instanceof Error && error.name === "Redirect") throw error;
+
+      // Fail silently for unauthenticated users so they can access the form!
     }
   },
   component: RegisterPage,
 });
-
-function RegisterPage() {
-  const { register: registerUser, isRegistering } = useAuth();
-  const navigate = Route.useNavigate();
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-  });
-
-  const onSubmit = async (data: RegisterFormValues) => {
-    try {
-      await registerUser(data);
-      navigate({ to: "/" });
-    } catch {
-      setError("root", {
-        type: "manual",
-        message: "Registration failed. Please try again.",
-      });
-    }
-  };
-
-  return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h1>Register</h1>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {errors.root && (
-            <div className="error-summary">{errors.root.message}</div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input id="name" type="text" {...register("name")} />
-            {errors.name && (
-              <span className="error">{errors.name.message}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" {...register("email")} />
-            {errors.email && (
-              <span className="error">{errors.email.message}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" {...register("password")} />
-            {errors.password && (
-              <span className="error">{errors.password.message}</span>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={isRegistering}
-            className="btn-primary"
-          >
-            {isRegistering ? "Creating account..." : "Register"}
-          </button>
-        </form>
-        <p>
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
-    </div>
-  );
-}
