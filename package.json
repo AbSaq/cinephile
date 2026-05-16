@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev": "concurrently -n \"CLIENT,SERVER\" -c \"cyan,magenta\" \"npm run dev:client\" \"npm run dev:server\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:client": "prettier --write \"client/**/*.{js,jsx,ts,tsx,json,css,md}\"",
@@ -19,6 +22,7 @@
   },
   "devDependencies": {
     "@types/prettier": "^3.0.0",
+    "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.4",
     "prettier": "^3.8.3",
