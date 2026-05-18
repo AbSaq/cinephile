@@ -10,7 +10,6 @@ interface MovieDetailViewProps {
   movieId: number;
 }
 
-// Helper
 const formatRuntime = (minutes?: number) => {
   if (!minutes) return "?";
   const hrs = Math.floor(minutes / 60);
@@ -33,30 +32,26 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
   const { data: userLists } = useUserLists();
   const { addMovie, removeMovie } = useManageMovieLists();
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="spinner-overlay show">
         <div className="spinner"></div>
       </div>
     );
-  if (isError || !movie)
+  }
+
+  if (isError || !movie) {
     return <div className="error-state">⚠️ Failed to load movie details.</div>;
+  }
 
   const isWatched = userLists?.watched.some((m) => m.movieId === movieId);
   const isWatchlisted = userLists?.watchlist.some((m) => m.movieId === movieId);
 
   return (
-    <div
-      className="modal-overlay open"
-      style={{ position: "relative", background: "none", padding: 0 }}
-    >
-      <div
-        className="modal"
-        style={{ width: "100%", maxHeight: "none", transform: "none" }}
-      >
+    <div className="modal-overlay">
+      <div className="modal">
         {/* Hero Section Banner */}
         <div className="modal-hero">
-          {/* ✅ FIXED: Changed to "/home" to return to the active main workspace grid instead of root empty view */}
           <Link
             to="/home"
             className="modal-close"
@@ -76,7 +71,6 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
           <div className="modal-hero-content">
             <h1 className="modal-title">{movie.title}</h1>
 
-            {/* ✅ ADDED: Movie Tagline */}
             {movie.tagline && (
               <p
                 className="modal-tagline"
@@ -97,7 +91,6 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
               <span className="modal-tag tag-rating">
                 ⭐ {movie.vote_average?.toFixed(1) || "-"}
               </span>
-              {/* ✅ ADDED: Runtime format tracker flag */}
               {movie.runtime && (
                 <span className="modal-tag tag-runtime">
                   ⏱️ {formatRuntime(movie.runtime)}
@@ -108,17 +101,8 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
         </div>
 
         {/* Overview Body */}
-        <div
-          className="modal-body"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
-            gap: "30px",
-            marginTop: "20px",
-          }}
-        >
-          {/* Left Column: Summary and Core info */}
-          <div>
+        <div className="modal-body">
+          <div className="modal-main-content">
             <h3 style={{ marginBottom: "10px", color: "var(--text)" }}>
               Synopsis
             </h3>
@@ -126,21 +110,18 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
               {movie.overview || "No overview available for this title."}
             </p>
 
-            {/* Action List Row Updates */}
             <div className="modal-actions" style={{ marginTop: "24px" }}>
               <button
                 className={`btn-action watched-btn ${isWatched ? "active" : ""}`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   if (isWatched) {
                     void removeMovie({ movieId, listType: "watched" });
                   } else {
                     void addMovie({
                       movieId,
                       listType: "watched",
-                      movieData: {
-                        ...movie,
-                        overview: movie.overview ?? "",
-                      },
+                      movieData: { ...movie, overview: movie.overview ?? "" },
                     });
                   }
                 }}
@@ -151,17 +132,15 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
               <button
                 className={`btn-action watchlist-btn ${isWatchlisted ? "active" : ""}`}
                 disabled={isWatched}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   if (isWatchlisted) {
                     void removeMovie({ movieId, listType: "watchlist" });
                   } else {
                     void addMovie({
                       movieId,
                       listType: "watchlist",
-                      movieData: {
-                        ...movie,
-                        overview: movie.overview ?? "",
-                      },
+                      movieData: { ...movie, overview: movie.overview ?? "" },
                     });
                   }
                 }}
@@ -174,16 +153,8 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
             </div>
           </div>
 
-          {/* Right Column: Meta details sidebar panel */}
-          <div
-            style={{
-              background: "var(--bg3, rgba(255,255,255,0.03))",
-              padding: "20px",
-              borderRadius: "10px",
-              border: "1px solid var(--border)",
-            }}
-          >
-            {/* Genre Tokens */}
+          {/* Right Column Details */}
+          <div className="modal-sidebar-panel">
             {movie.genres && movie.genres.length > 0 && (
               <div style={{ marginBottom: "15px" }}>
                 <h4
@@ -215,7 +186,6 @@ export function MovieDetailView({ movieId }: MovieDetailViewProps) {
               </div>
             )}
 
-            {/* Financial tracking fields */}
             {movie.budget > 0 && (
               <div style={{ marginBottom: "12px" }}>
                 <h4

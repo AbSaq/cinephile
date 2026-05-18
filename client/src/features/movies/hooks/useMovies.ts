@@ -17,14 +17,13 @@ export function useMovieBrowser(filters: {
   page?: number;
   genre?: number;
   year?: number;
-  rating?: number; // Added to match backend query parser
-  sort?: string; // Added to match backend query parser
+  rating?: number;
+  sort?: string;
   search?: string;
 }) {
   return useQuery<TMDBResponse<Movie>>({
     queryKey: MOVIE_KEYS.browser(filters),
     queryFn: async () => {
-      // Axios passing filters as query parameters (?page=1&rating=8...)
       const { data } = await apiClient.get("/movies", { params: filters });
       return data;
     },
