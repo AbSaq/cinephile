@@ -59,7 +59,6 @@ export function Sidebar({ user }: SidebarProps) {
 
         {/* Navigation links */}
         <nav style={{ display: "flex", flexDirection: "column" }}>
-          {/* ✅ FIXED: Pointing directly to your new home layout feed endpoint */}
           <Link
             to="/home"
             className="nav-item"
@@ -72,7 +71,6 @@ export function Sidebar({ user }: SidebarProps) {
             </span>
           </Link>
 
-          {/* ✅ FIXED: Cleaned up path strings matching your folder structure paths */}
           <Link
             to="/watched"
             className="nav-item"
@@ -122,7 +120,6 @@ export function Sidebar({ user }: SidebarProps) {
               <div className="user-email">{user?.email || ""}</div>
             </div>
           </div>
-          {/* ✅ FIXED: Assigned functional handleLogout click event processor wrapper */}
           <button className="btn-logout" onClick={handleLogout}>
             Logout
           </button>

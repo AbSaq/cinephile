@@ -911,3 +911,40 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Ensure modal overlay covers everything and is clickable */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  pointer-events: auto; /* Forces browser to allow clicks */
+}
+
+/* Modal Body Layout */
+.modal-body {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.modal-sidebar-panel {
+  background: var(--bg3);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* Responsive fix so it doesn't break on mobile screens */
+@media (max-width: 768px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
